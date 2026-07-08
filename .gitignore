@@ -1,0 +1,30 @@
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Large raw data (optional — uncomment if you don't want to commit these
+# to GitHub; keep them locally / in OneDrive instead. Not needed if you've
+# already committed them and want to keep tracking changes.)
+# books.csv
+# ratings.csv
+# users.csv
