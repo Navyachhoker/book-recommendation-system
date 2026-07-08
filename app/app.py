@@ -53,7 +53,8 @@ with tab2:
     n2 = st.slider("Number of recommendations", 5, 20, 10, key="cf_n")
     if st.button("Get recommendations", key="cf_btn"):
         results = cf_recommend(user_id, A["book_meta"], A["isbn2idx"], A["rated_by_user"],
-                                A["user2idx"], A["user_means"], A["U_sigma"], A["Vt"], n2)
+                                A["user2idx"], A["user_means"], A["U_sigma"], A["Vt"], n2,
+                                algo=A.get("cf_algo"))
         render_results(results, "predicted_rating", "Predicted rating")
 
 with tab3:
@@ -66,7 +67,7 @@ with tab3:
         results = hybrid_recommend(user_id3, seed, A["book_meta"], A["tfidf_matrix"],
                                     A["book_indices"], A["isbn2idx"], A["rated_by_user"],
                                     A["user2idx"], A["user_means"], A["U_sigma"], A["Vt"],
-                                    n3, alpha)
+                                    n3, alpha, algo=A.get("cf_algo"))
         render_results(results, "hybrid_score", "Hybrid score")
 
 st.divider()

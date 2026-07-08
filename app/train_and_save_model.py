@@ -9,7 +9,7 @@ import joblib
 import config
 from data_pipeline import build_dataset
 from content_model import build_content_model
-from cf_model import build_cf_model
+from cf_model import build_cf_model, build_cf_model_surprise
 
 
 def main():
@@ -21,8 +21,11 @@ def main():
     print("Building content-based model (TF-IDF)...")
     book_meta, tfidf, tfidf_matrix, book_indices = build_content_model(df, books)
 
-    print("Building collaborative filtering model (SVD)...")
+    print("Building collaborative filtering model (legacy mean-centred SVD)...")
     user2idx, isbn2idx, user_means, U_sigma, Vt = build_cf_model(df)
+
+    print("Building collaborative filtering model (bias-aware SVD, surprise)...")
+    cf_algo = build_cf_model_surprise(df)
 
     rated_by_user = df.groupby("User-ID")["ISBN"].apply(set).to_dict()
     sample_user_ids = df["User-ID"].value_counts().head(config.N_SAMPLE_USERS).index.tolist()
@@ -37,6 +40,7 @@ def main():
         "user_means": user_means,
         "U_sigma": U_sigma,
         "Vt": Vt,
+        "cf_algo": cf_algo,
         "rated_by_user": rated_by_user,
         "sample_user_ids": sample_user_ids,
     }
