@@ -7,15 +7,15 @@ from cf_model import predict_all_ratings
 
 def hybrid_recommend(user_id, seed_title, book_meta, tfidf_matrix, book_indices,
                       isbn2idx, rated_by_user, user2idx, user_means, U_sigma, Vt,
-                      n=10, alpha=0.6):
+                      n=10, alpha=0.6, algo=None):
     """
     alpha weights collaborative filtering vs. content similarity:
     alpha=1.0 -> pure CF, alpha=0.0 -> pure content-based.
-    """
-    all_preds = predict_all_ratings(user_id, user2idx, user_means, U_sigma, Vt)
-    if all_preds is None:
-        return None
 
+    If `algo` (a fitted surprise SVD model) is passed in, CF scores come
+    from the bias-aware surprise model. Otherwise falls back to the legacy
+    mean-centred SVD (U_sigma / Vt).
+    """
     seed_idx = find_seed_index(seed_title, book_indices)
     if seed_idx is not None:
         content_scores = cosine_similarity(tfidf_matrix[seed_idx], tfidf_matrix).flatten()
@@ -25,16 +25,24 @@ def hybrid_recommend(user_id, seed_title, book_meta, tfidf_matrix, book_indices,
 
     rated = rated_by_user.get(user_id, set())
     cand = book_meta.copy()
-    cand["b_idx"] = cand["ISBN"].map(isbn2idx)
-    cand = cand.dropna(subset=["b_idx"])
-    cand["b_idx"] = cand["b_idx"].astype(int)
-    cand = cand[~cand["ISBN"].isin(rated)]
+    cand = cand[~cand["ISBN"].isin(rated)].copy()
 
-    cf_vals = all_preds[cand["b_idx"].values]
+    if algo is not None:
+        if user_id not in user2idx:
+            return None
+        cf_vals = cand["ISBN"].apply(lambda isbn: algo.predict(user_id, isbn).est).values
+    else:
+        all_preds = predict_all_ratings(user_id, user2idx, user_means, U_sigma, Vt)
+        if all_preds is None:
+            return None
+        cand["b_idx"] = cand["ISBN"].map(isbn2idx)
+        cand = cand.dropna(subset=["b_idx"])
+        cand["b_idx"] = cand["b_idx"].astype(int)
+        cf_vals = all_preds[cand["b_idx"].values]
+
     cf_min, cf_max = cf_vals.min(), cf_vals.max()
     cf_norm = (cf_vals - cf_min) / (cf_max - cf_min) if cf_max > cf_min else np.zeros_like(cf_vals)
 
-    cand = cand.copy()
     cand["cf_score_norm"] = cf_norm
     cand["content_score"] = cand["ISBN"].map(isbn_content).fillna(0.0)
     cand["hybrid_score"] = alpha * cand["cf_score_norm"] + (1 - alpha) * cand["content_score"]
