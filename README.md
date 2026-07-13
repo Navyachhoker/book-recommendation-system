@@ -3,6 +3,7 @@
 A hybrid recommendation engine built on the Book-Crossing dataset (1.15M ratings, 271K books, 278K users), combining content-based filtering (TF-IDF + cosine similarity) with collaborative filtering (bias-aware SVD). Deployed as an interactive Streamlit web application.
 
 **Live demo:** https://book-recommendation-system-s37uayimdoxbuvdgxnlmto.streamlit.app/
+
 **Repository:** https://github.com/Navyachhoker/book-recommendation-system
 
 ---
